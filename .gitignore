@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.env
+*.pem
+!*publica.pem
+*.key
+*.p12
+chave_aes*.bin
+senha_aes*.txt
+execucoes/
+pacotes/
+entrega/
+historico.bundle
+.hibrida-*/
