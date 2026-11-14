@@ -109,18 +109,6 @@ originais estão em `entrega/evidencias_originais/`, fora do Git, e são usadas 
 `evidencias/fingerprint_grupo.txt` registra o SHA-256 do SubjectPublicKeyInfo DER
 da pública do grupo. Não contém chaves privadas ou segredos em texto claro.
 
-## Checkpoint e entrega
-
-O documento único está em `entrega/Atividade_16_Criptografia_Hibrida_Grupo.pdf`,
-fora do versionamento. Os nomes e a escolha Python/CLI estão preenchidos.
-O Classroom não pôde ser acessado pela automação: o envio da pública do grupo e
-o download/validação da pública do professor continuam pendentes. A geração da
-pública local não equivale a comprovar seu envio no Classroom.
-
-O PDF não foi submetido. A submissão final depende do OK explícito do aluno.
-A publicação do repositório e sua visibilidade devem ser confirmadas nas
-evidências de publicação; um endereço planejado não é prova de repositório criado.
-
 ## Referências
 
 - [OpenSSL enc](https://docs.openssl.org/3.5/man1/openssl-enc/)
