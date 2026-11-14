@@ -82,3 +82,30 @@ def gerar_chaves(ssl: OpenSSL, pasta: Path, prefixo: str = 'grupo') -> tuple[Pat
         privada.chmod(0o600)
         _copiar_novo(t / 'publica.pem', publica)
     return privada, publica
+
+
+def cifrar(ssl: OpenSSL, entrada: Path, publica: Path, pacote: Path) -> Path:
+    entrada, publica, pacote = map(lambda p: Path(p).resolve(), (entrada, publica, pacote))
+    if not entrada.is_file():
+        raise ErroCriptografia('Arquivo de entrada não encontrado.')
+    if pacote.exists():
+        raise ErroCriptografia('A pasta do pacote já existe; nenhum arquivo foi sobrescrito.')
+    ssl.executar('pkey', '-pubin', '-in', str(publica), '-noout')
+    pacote.parent.mkdir(parents=True, exist_ok=True)
+    # O diretório final contém apenas ciphertexts e parâmetros públicos.
+    with tempfile.TemporaryDirectory(prefix='.hibrida-', dir=pacote.parent) as stage_dir:
+        stage = Path(stage_dir)
+        with tempfile.TemporaryDirectory(prefix='.hibrida-', dir=pacote.parent) as key_dir:
+            segredo, senha = Path(key_dir) / 'chave_aes.bin', Path(key_dir) / 'senha_aes.txt'
+            ssl.executar('rand', '-out', str(segredo), '32')
+            if segredo.stat().st_size != 32:
+                raise ErroCriptografia('O segredo deve ter 32 bytes.')
+            ssl.executar('base64', '-A', '-in', str(segredo), '-out', str(senha))
+            ssl.executar('enc', '-aes-256-cbc', '-salt', *KDF,
+                         '-in', str(entrada), '-out', str(stage / 'mensagem.enc'),
+                         '-pass', f'file:{senha}')
+            ssl.executar('pkeyutl', '-encrypt', '-pubin', '-inkey', str(publica),
+                         *OAEP, '-in', str(segredo), '-out', str(stage / 'chave_aes.enc'))
+        (stage / 'parametros.json').write_text(json.dumps(PARAMETROS, indent=2) + '\n', encoding='utf-8')
+        os.rename(stage, pacote)
+    return pacote
