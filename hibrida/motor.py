@@ -109,3 +109,30 @@ def cifrar(ssl: OpenSSL, entrada: Path, publica: Path, pacote: Path) -> Path:
         (stage / 'parametros.json').write_text(json.dumps(PARAMETROS, indent=2) + '\n', encoding='utf-8')
         os.rename(stage, pacote)
     return pacote
+
+
+def decifrar(ssl: OpenSSL, pacote: Path, privada: Path, saida: Path) -> Path:
+    pacote, privada, saida = map(lambda p: Path(p).resolve(), (pacote, privada, saida))
+    if saida.exists():
+        raise ErroCriptografia('O arquivo de saída já existe; nenhum arquivo foi sobrescrito.')
+    try:
+        parametros = json.loads((pacote / 'parametros.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError) as erro:
+        raise ErroCriptografia('Pacote ausente ou parâmetros inválidos.') from erro
+    if parametros != PARAMETROS:
+        raise ErroCriptografia('Formato ou parâmetros do pacote não suportados.')
+    saida.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.hibrida-', dir=saida.parent) as temp:
+        t = Path(temp)
+        ssl.executar('pkeyutl', '-decrypt', '-inkey', str(privada), *OAEP,
+                     '-in', str(pacote / 'chave_aes.enc'), '-out', str(t / 'chave_aes_restaurada.bin'))
+        if (t / 'chave_aes_restaurada.bin').stat().st_size != 32:
+            raise ErroCriptografia('O segredo recuperado deve ter 32 bytes.')
+        ssl.executar('base64', '-A', '-in', str(t / 'chave_aes_restaurada.bin'),
+                     '-out', str(t / 'senha_aes.txt'))
+        ssl.executar('enc', '-d', '-aes-256-cbc', *KDF,
+                     '-in', str(pacote / 'mensagem.enc'), '-out', str(t / 'restaurado'),
+                     '-pass', f'file:{t / "senha_aes.txt"}')
+        # O resultado só fica disponível quando o OpenSSL termina com sucesso.
+        _copiar_novo(t / 'restaurado', saida)
+    return saida
