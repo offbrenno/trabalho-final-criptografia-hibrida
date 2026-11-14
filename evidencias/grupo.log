@@ -1,0 +1,12 @@
+[Registro de execução real; somente caminhos locais normalizados para publicação pública.]
+Execução real: 2026-11-13T20:54:35.645294-03:00
+$ python app.py --log evidencias/grupo_openssl.log gerar-chaves --pasta chaves --prefixo grupo
+Par RSA-2048 criado. Privada local: [PROJETO]\chaves\grupo_privada.pem; pública: [PROJETO]\chaves\grupo_publica.pem
+[código de saída: 0]
+$ "openssl" pkey -pubin -in chaves/grupo_publica.pem -noout
+[código de saída: 0]
+$ "openssl" pkey -pubin -in chaves/grupo_publica.pem -outform DER -out [PROJETO]\execucoes\grupo_publica.der
+[código de saída: 0]
+$ "openssl" dgst -sha256 [PROJETO]\execucoes\grupo_publica.der
+SHA2-256([PROJETO]\execucoes\grupo_publica.der)= 77771e1793a7a68de07a7ac983bc3e30328c1f022fc637a53a078b25449740b2
+[código de saída: 0]

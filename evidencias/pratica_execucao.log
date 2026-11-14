@@ -1,0 +1,49 @@
+[Registro de execução real; somente caminhos locais normalizados para publicação pública.]
+$ python scripts/pratica_openssl.py --pasta execucoes/parte2 --openssl "openssl"
+Execução real: 2026-11-13T20:54:36-03:00
+Aplicação: Python 3.12.14 / interface CLI
+$ openssl version
+OpenSSL 3.2.1 30 Jan 2024 (Library: OpenSSL 3.2.1 30 Jan 2024)
+[código de saída: 0]
+mensagem.txt: 280 bytes
+$ openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out privada.pem
+[código de saída: 0]
+$ openssl rsa -in privada.pem -pubout -out publica.pem
+writing RSA key
+[código de saída: 0]
+$ openssl rand -out chave_aes.bin 32
+[código de saída: 0]
+chave_aes.bin: 32 bytes (256 bits), tamanho confirmado
+Inspeção binária: 0x0A presente=False; 0x00 presente=True
+Decisão: Base64 em linha única, preservando os 32 bytes como entrada de PBKDF2.
+$ openssl base64 -A -in chave_aes.bin -out senha_aes.txt
+[código de saída: 0]
+$ openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 -md sha256 -in mensagem.txt -out mensagem.enc -pass file:senha_aes.txt
+[código de saída: 0]
+$ openssl pkeyutl -encrypt -pubin -inkey publica.pem -in chave_aes.bin -out chave_aes.enc -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256
+[código de saída: 0]
+$ openssl pkeyutl -decrypt -inkey privada.pem -in chave_aes.enc -out chave_aes_restaurada.bin -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256
+[código de saída: 0]
+$ openssl base64 -A -in chave_aes_restaurada.bin -out senha_aes_recuperada.txt
+[código de saída: 0]
+$ openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -in mensagem.enc -out mensagem_restaurada.txt -pass file:senha_aes_recuperada.txt
+[código de saída: 0]
+$ openssl dgst -sha256 mensagem.txt mensagem_restaurada.txt
+SHA2-256(mensagem.txt)= 065920a81eef8dbc443ee7f5828367c6661a6d27754b0e73d4599de6b7587893
+SHA2-256(mensagem_restaurada.txt)= 065920a81eef8dbc443ee7f5828367c6661a6d27754b0e73d4599de6b7587893
+[código de saída: 0]
+Comparação Python dos bytes: chave_aes.bin == chave_aes_restaurada.bin: True
+ROUND-TRIP: OK (segredo e arquivo iguais byte a byte)
+$ openssl dgst -sha256 -sign privada.pem -out mensagem.sig mensagem.txt
+[código de saída: 0]
+$ openssl dgst -sha256 -verify publica.pem -signature mensagem.sig mensagem_restaurada.txt
+Verified OK
+[código de saída: 0]
+$ openssl dgst -sha256 -verify publica.pem -signature mensagem.sig mensagem_adulterada.txt
+Verification failure
+100000000A000000:error:02000068:rsa routines:ossl_rsa_verify:bad signature:crypto/rsa/rsa_sign.c:426:
+100000000A000000:error:1C880004:Provider routines:rsa_verify:RSA lib:providers/implementations/signature/rsa_sig.c:785:
+[código de saída: 1]
+CONTROLE NEGATIVO: OK (assinatura rejeitou arquivo adulterado)
+RESULTADO FINAL: SUCESSO
+[código de saída: 0]

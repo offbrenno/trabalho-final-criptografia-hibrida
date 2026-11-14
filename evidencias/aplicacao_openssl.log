@@ -1,0 +1,24 @@
+[Registro de execução real; somente caminhos locais normalizados para publicação pública.]
+$ openssl pkey -pubin -in [PROJETO]\chaves\grupo_publica.pem -noout
+[código de saída: 0]
+$ openssl rand -out [PROJETO]\execucoes\app\.hibrida-0of74jyc\chave_aes.bin 32
+[código de saída: 0]
+$ openssl base64 -A -in [PROJETO]\execucoes\app\.hibrida-0of74jyc\chave_aes.bin -out [PROJETO]\execucoes\app\.hibrida-0of74jyc\senha_aes.txt
+[código de saída: 0]
+$ openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 -md sha256 -in [PROJETO]\exemplos\mensagem.txt -out [PROJETO]\execucoes\app\.hibrida-csm2ej0h\mensagem.enc -pass file:[PROJETO]\execucoes\app\.hibrida-0of74jyc\senha_aes.txt
+[código de saída: 0]
+$ openssl pkeyutl -encrypt -pubin -inkey [PROJETO]\chaves\grupo_publica.pem -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256 -in [PROJETO]\execucoes\app\.hibrida-0of74jyc\chave_aes.bin -out [PROJETO]\execucoes\app\.hibrida-csm2ej0h\chave_aes.enc
+[código de saída: 0]
+$ openssl pkeyutl -decrypt -inkey [PROJETO]\chaves\grupo_privada.pem -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256 -in [PROJETO]\execucoes\app\pacote\chave_aes.enc -out [PROJETO]\execucoes\app\.hibrida-y6y87b9b\chave_aes_restaurada.bin
+[código de saída: 0]
+$ openssl base64 -A -in [PROJETO]\execucoes\app\.hibrida-y6y87b9b\chave_aes_restaurada.bin -out [PROJETO]\execucoes\app\.hibrida-y6y87b9b\senha_aes.txt
+[código de saída: 0]
+$ openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -in [PROJETO]\execucoes\app\pacote\mensagem.enc -out [PROJETO]\execucoes\app\.hibrida-y6y87b9b\restaurado -pass file:[PROJETO]\execucoes\app\.hibrida-y6y87b9b\senha_aes.txt
+[código de saída: 0]
+$ openssl dgst -sha256 -sign [PROJETO]\chaves\grupo_privada.pem -out [PROJETO]\execucoes\app\.hibrida-h5c8haxe\mensagem.sig [PROJETO]\exemplos\mensagem.txt
+[código de saída: 0]
+$ openssl pkey -pubin -in [PROJETO]\chaves\grupo_publica.pem -noout
+[código de saída: 0]
+$ openssl dgst -sha256 -verify [PROJETO]\chaves\grupo_publica.pem -signature [PROJETO]\execucoes\app\mensagem.sig [PROJETO]\execucoes\app\restaurada.txt
+Verified OK
+[código de saída: 0]

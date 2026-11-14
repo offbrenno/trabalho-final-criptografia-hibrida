@@ -1,0 +1,20 @@
+[Registro de execução real; somente caminhos locais normalizados para publicação pública.]
+Execução real: 2026-11-13T20:54:37.469822-03:00
+$ python app.py --log evidencias/aplicacao_openssl.log cifrar --entrada exemplos/mensagem.txt --publica chaves/grupo_publica.pem --pacote execucoes/app/pacote
+Pacote criado: [PROJETO]\execucoes\app\pacote
+[código de saída: 0]
+$ python app.py --log evidencias/aplicacao_openssl.log decifrar --pacote execucoes/app/pacote --privada chaves/grupo_privada.pem --saida execucoes/app/restaurada.txt
+Arquivo restaurado: [PROJETO]\execucoes\app\restaurada.txt
+SHA-256: 065920a81eef8dbc443ee7f5828367c6661a6d27754b0e73d4599de6b7587893
+[código de saída: 0]
+$ python app.py --log evidencias/aplicacao_openssl.log assinar --entrada exemplos/mensagem.txt --privada chaves/grupo_privada.pem --assinatura execucoes/app/mensagem.sig
+Assinatura criada: [PROJETO]\execucoes\app\mensagem.sig
+[código de saída: 0]
+$ python app.py --log evidencias/aplicacao_openssl.log verificar --entrada execucoes/app/restaurada.txt --publica chaves/grupo_publica.pem --assinatura execucoes/app/mensagem.sig
+Verified OK
+[código de saída: 0]
+$ "openssl" dgst -sha256 exemplos/mensagem.txt execucoes/app/restaurada.txt
+SHA2-256(exemplos/mensagem.txt)= 065920a81eef8dbc443ee7f5828367c6661a6d27754b0e73d4599de6b7587893
+SHA2-256(execucoes/app/restaurada.txt)= 065920a81eef8dbc443ee7f5828367c6661a6d27754b0e73d4599de6b7587893
+[código de saída: 0]
+ROUND-TRIP DA APLICAÇÃO: OK; hashes e bytes idênticos.

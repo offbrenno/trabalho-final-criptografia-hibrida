@@ -1,0 +1,5 @@
+Atividade 16 - Criptografia Híbrida e Checkpoint 1
+Disciplina: Segurança de Software.
+Este arquivo será cifrado com AES-256-CBC e PBKDF2.
+O segredo aleatório será protegido com RSA-2048 e OAEP-SHA256.
+Após a decriptação, o conteúdo e o hash SHA-256 devem ser idênticos.

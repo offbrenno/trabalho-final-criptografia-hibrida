@@ -1,0 +1,2 @@
+[Registro de execução real; somente caminhos locais normalizados para publicação pública.]
+SHA2-256([PROJETO]\execucoes\grupo_publica.der)= 77771e1793a7a68de07a7ac983bc3e30328c1f022fc637a53a078b25449740b2

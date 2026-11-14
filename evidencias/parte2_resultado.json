@@ -1,0 +1,21 @@
+{
+  "data_execucao": "2026-11-13T20:54:36-03:00",
+  "openssl": "OpenSSL 3.2.1 30 Jan 2024 (Library: OpenSSL 3.2.1 30 Jan 2024)",
+  "rsa_bits": 2048,
+  "segredo_bytes": 32,
+  "pbkdf2_iteracoes": 100000,
+  "arquivo_bytes": 280,
+  "sha256_original": "065920a81eef8dbc443ee7f5828367c6661a6d27754b0e73d4599de6b7587893",
+  "sha256_restaurado": "065920a81eef8dbc443ee7f5828367c6661a6d27754b0e73d4599de6b7587893",
+  "round_trip": true,
+  "assinatura_valida": true,
+  "adulteracao_rejeitada": true,
+  "tamanhos_bytes": {
+    "mensagem.txt": 280,
+    "mensagem.enc": 304,
+    "chave_aes.bin": 32,
+    "chave_aes.enc": 256,
+    "mensagem_restaurada.txt": 280,
+    "mensagem.sig": 256
+  }
+}

@@ -2,5 +2,6 @@
 *.py text eol=lf
 *.md text eol=lf
 evidencias/** -text
+exemplos/** -text
 *.enc -text
 *.sig -text
