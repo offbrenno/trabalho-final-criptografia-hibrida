@@ -136,3 +136,29 @@ def decifrar(ssl: OpenSSL, pacote: Path, privada: Path, saida: Path) -> Path:
         # O resultado só fica disponível quando o OpenSSL termina com sucesso.
         _copiar_novo(t / 'restaurado', saida)
     return saida
+
+
+def assinar(ssl: OpenSSL, entrada: Path, privada: Path, assinatura: Path) -> Path:
+    entrada, privada, assinatura = map(lambda p: Path(p).resolve(), (entrada, privada, assinatura))
+    if assinatura.exists():
+        raise ErroCriptografia('A assinatura de saída já existe.')
+    assinatura.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.hibrida-', dir=assinatura.parent) as temp:
+        t = Path(temp) / 'mensagem.sig'
+        ssl.executar('dgst', '-sha256', '-sign', str(privada), '-out', str(t), str(entrada))
+        _copiar_novo(t, assinatura)
+    return assinatura
+
+
+def verificar(ssl: OpenSSL, entrada: Path, publica: Path, assinatura: Path) -> bool:
+    # Erros de leitura/chave são diferentes de uma assinatura incompatível.
+    entrada, publica, assinatura = map(lambda p: Path(p).resolve(), (entrada, publica, assinatura))
+    for arquivo in (entrada, publica, assinatura):
+        if not arquivo.is_file():
+            raise ErroCriptografia(f'Arquivo não encontrado: {arquivo.name}')
+    ssl.executar('pkey', '-pubin', '-in', str(publica), '-noout')
+    resultado = ssl.executar('dgst', '-sha256', '-verify', str(publica),
+                             '-signature', str(assinatura), str(entrada), verificar=False)
+    if resultado.returncode not in (0, 1):
+        raise ErroCriptografia('Falha inesperada na verificação da assinatura.')
+    return resultado.returncode == 0
