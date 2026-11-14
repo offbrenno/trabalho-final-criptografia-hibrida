@@ -1,0 +1,23 @@
+[Registro de execução real; somente caminhos locais normalizados para publicação pública.]
+Execução real: 2026-11-13T21:36:29.189238-03:00
+$ [PROJETO]\execucoes\venv_limpa\Scripts\python.exe -c "import cryptography; print(\"Motor integrado: cryptography\",cryptography.__version__)"
+Motor integrado: cryptography 50.0.2
+[código de saída: 0]
+$ [PROJETO]\execucoes\venv_limpa\Scripts\python.exe app.py cifrar --entrada exemplos/documento_teste.pdf --publica chaves/grupo_publica.pem --pacote execucoes/app_cryptography/pacote
+Pacote criado: execucoes\app_cryptography\pacote
+[código de saída: 0]
+$ [PROJETO]\execucoes\venv_limpa\Scripts\python.exe app.py decifrar --pacote execucoes/app_cryptography/pacote --privada chaves/grupo_privada.pem --saida execucoes/app_cryptography/restaurado.pdf
+Arquivo restaurado: execucoes\app_cryptography\restaurado.pdf
+SHA-256: 79adad45d5e6b1f914ea3c50214e3534e87946ff37f759ada17c07c4ea470f3c
+[código de saída: 0]
+$ [PROJETO]\execucoes\venv_limpa\Scripts\python.exe app.py assinar --entrada exemplos/documento_teste.pdf --privada chaves/grupo_privada.pem --assinatura execucoes/app_cryptography/documento.sig
+Assinatura criada: execucoes\app_cryptography\documento.sig
+[código de saída: 0]
+$ [PROJETO]\execucoes\venv_limpa\Scripts\python.exe app.py verificar --entrada execucoes/app_cryptography/restaurado.pdf --publica chaves/grupo_publica.pem --assinatura execucoes/app_cryptography/documento.sig
+Verified OK
+[código de saída: 0]
+$ [PROJETO]\execucoes\venv_limpa\Scripts\python.exe -c "from pathlib import Path; from cripto_hibrida.arquivos import sha256; a=Path(\"exemplos/documento_teste.pdf\"); b=Path(\"execucoes/app_cryptography/restaurado.pdf\"); print(\"SHA-256 original:\",sha256(a)); print(\"SHA-256 restaurado:\",sha256(b)); assert sha256(a)==sha256(b) and a.read_bytes()==b.read_bytes(); print(\"ROUND-TRIP DA APLICAÇÃO: OK\")"
+SHA-256 original: 79adad45d5e6b1f914ea3c50214e3534e87946ff37f759ada17c07c4ea470f3c
+SHA-256 restaurado: 79adad45d5e6b1f914ea3c50214e3534e87946ff37f759ada17c07c4ea470f3c
+ROUND-TRIP DA APLICAÇÃO: OK
+[código de saída: 0]

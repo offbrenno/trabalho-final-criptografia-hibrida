@@ -1,0 +1,45 @@
+[Registro de execução real; somente caminhos locais normalizados para publicação pública.]
+Execução real: 2026-11-13T21:36:23.916219-03:00
+$ [PROJETO]\execucoes\venv_limpa\Scripts\python.exe -m pytest -v -s --basetemp=execucoes/pytest_migracao
+============================= test session starts =============================
+platform win32 -- Python 3.12.14, pytest-9.2.0, pluggy-1.7.0 -- [PROJETO]\execucoes\venv_limpa\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: [PROJETO]
+configfile: pytest.ini
+testpaths: tests
+collecting ... collected 15 items
+
+tests/test_hibrida.py::test_round_trip[vazio] ROUND-TRIP 0 bytes: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+PASSED
+tests/test_hibrida.py::test_round_trip[utf8] ROUND-TRIP 30 bytes: 12e96f213647c806f8f2557e2db4ab5a7d2a0dfc9bb71437be6c269c04b2b1e4 = 12e96f213647c806f8f2557e2db4ab5a7d2a0dfc9bb71437be6c269c04b2b1e4
+PASSED
+tests/test_hibrida.py::test_round_trip[binario] ROUND-TRIP 256 bytes: 40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880 = 40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880
+PASSED
+tests/test_hibrida.py::test_round_trip[1MiB] ROUND-TRIP 1048576 bytes: fbbab289f7f94b25736c58be46a994c441fd02552cc6022352e3d86d2fab7c83 = fbbab289f7f94b25736c58be46a994c441fd02552cc6022352e3d86d2fab7c83
+PASSED
+tests/test_hibrida.py::test_cifragem_e_aleatoria_por_arquivo PASSED
+tests/test_hibrida.py::test_chave_privada_errada_nao_produz_saida PASSED
+tests/test_hibrida.py::test_assinatura_e_adulteracao PASSED
+tests/test_hibrida.py::test_nao_sobrescreve_arquivos PASSED
+tests/test_hibrida.py::test_rejeita_parametros_inesperados PASSED
+tests/test_hibrida.py::test_cli_round_trip_e_assinatura $ python app.py cifrar --entrada [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\original.bin --publica [PROJETO]\execucoes\pytest_migracao\chaves0\destinatario_publica.pem --pacote [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\pacote
+Pacote criado: [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\pacote
+$ python app.py decifrar --pacote [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\pacote --privada [PROJETO]\execucoes\pytest_migracao\chaves0\destinatario_privada.pem --saida [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\saida.bin
+Arquivo restaurado: [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\saida.bin
+SHA-256: 98505085f828d30980357952b5e605d91514d06655d53eef91d3027e7515a9e5
+$ python app.py assinar --entrada [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\original.bin --privada [PROJETO]\execucoes\pytest_migracao\chaves0\destinatario_privada.pem --assinatura [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\arquivo.sig
+Assinatura criada: [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\arquivo.sig
+$ python app.py verificar --entrada [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\saida.bin --publica [PROJETO]\execucoes\pytest_migracao\chaves0\destinatario_publica.pem --assinatura [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\arquivo.sig
+Verified OK
+$ python app.py verificar --entrada [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\saida.bin --publica [PROJETO]\execucoes\pytest_migracao\chaves0\destinatario_publica.pem --assinatura [PROJETO]\execucoes\pytest_migracao\test_cli_round_trip_e_assinatu0\arquivo.sig
+Verification failure
+PASSED
+tests/test_hibrida.py::test_cli_geracao_de_chaves PASSED
+tests/test_hibrida.py::test_aplicacao_funciona_sem_binarios_externos PASSED
+tests/test_hibrida.py::test_pdf_exemplo_round_trip ROUND-TRIP PDF: 79adad45d5e6b1f914ea3c50214e3534e87946ff37f759ada17c07c4ea470f3c = 79adad45d5e6b1f914ea3c50214e3534e87946ff37f759ada17c07c4ea470f3c
+PASSED
+tests/test_hibrida.py::test_arquivo_cifrado_truncado_nao_produz_saida PASSED
+tests/test_hibrida.py::test_rejeita_chave_ec_em_operacao_rsa PASSED
+
+============================= 15 passed in 4.74s ==============================
+[código de saída: 0]

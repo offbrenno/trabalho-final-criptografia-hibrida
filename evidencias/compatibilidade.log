@@ -1,0 +1,23 @@
+[Registro real de interoperabilidade; somente caminhos locais normalizados.]
+$ [PROJETO]\execucoes\venv_limpa\Scripts\python.exe app.py decifrar --pacote execucoes/app/pacote --privada chaves/grupo_privada.pem --saida execucoes/compatibilidade/legado_restaurado.txt
+Arquivo restaurado: execucoes\compatibilidade\legado_restaurado.txt
+SHA-256: 065920a81eef8dbc443ee7f5828367c6661a6d27754b0e73d4599de6b7587893
+[código de saída: 0]
+$ [PROJETO]\execucoes\venv_limpa\Scripts\python.exe -c "from pathlib import Path; from cripto_hibrida.arquivos import sha256; a=Path(\"exemplos/mensagem.txt\"); b=Path(\"execucoes/compatibilidade/legado_restaurado.txt\"); assert a.read_bytes()==b.read_bytes(); print(\"OpenSSL antigo -> cryptography:\",sha256(a),\"=\",sha256(b))"
+OpenSSL antigo -> cryptography: 065920a81eef8dbc443ee7f5828367c6661a6d27754b0e73d4599de6b7587893 = 065920a81eef8dbc443ee7f5828367c6661a6d27754b0e73d4599de6b7587893
+[código de saída: 0]
+$ "openssl" pkeyutl -decrypt -inkey chaves/grupo_privada.pem -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256 -in execucoes/app_cryptography/pacote/chave_aes.enc -out execucoes/compatibilidade/chave_aes_restaurada.bin
+[código de saída: 0]
+$ "openssl" base64 -A -in execucoes/compatibilidade/chave_aes_restaurada.bin -out execucoes/compatibilidade/senha_aes.txt
+[código de saída: 0]
+$ "openssl" enc -d -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -in execucoes/app_cryptography/pacote/mensagem.enc -out execucoes/compatibilidade/openssl_restaurado.pdf -pass file:execucoes/compatibilidade/senha_aes.txt
+[código de saída: 0]
+$ [PROJETO]\execucoes\venv_limpa\Scripts\python.exe -c "from pathlib import Path; from cripto_hibrida.arquivos import sha256; a=Path(\"exemplos/documento_teste.pdf\"); b=Path(\"execucoes/compatibilidade/openssl_restaurado.pdf\"); assert a.read_bytes()==b.read_bytes(); print(\"cryptography -> OpenSSL:\",sha256(a),\"=\",sha256(b))"
+cryptography -> OpenSSL: 79adad45d5e6b1f914ea3c50214e3534e87946ff37f759ada17c07c4ea470f3c = 79adad45d5e6b1f914ea3c50214e3534e87946ff37f759ada17c07c4ea470f3c
+[código de saída: 0]
+$ "openssl" dgst -sha256 -verify chaves/grupo_publica.pem -signature execucoes/app_cryptography/documento.sig exemplos/documento_teste.pdf
+Verified OK
+[código de saída: 0]
+$ [PROJETO]\execucoes\venv_limpa\Scripts\python.exe -c "from pathlib import Path; from cripto_hibrida.assinatura import verificar; assert verificar(Path(\"execucoes/parte2/mensagem.txt\"), Path(\"execucoes/parte2/publica.pem\"), Path(\"execucoes/parte2/mensagem.sig\")); print(\"Assinatura antiga OpenSSL -> cryptography: válida\")"
+Assinatura antiga OpenSSL -> cryptography: válida
+[código de saída: 0]

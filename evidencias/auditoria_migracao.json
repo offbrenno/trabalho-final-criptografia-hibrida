@@ -1,0 +1,17 @@
+{
+  "escopo": "Histórico alcançável por todas as branches locais, origin/main e índice preparado",
+  "head_no_inicio_da_revisao": "1813edd59e8ef1ede129266a696c32a9062f423e",
+  "commits_analisados": 14,
+  "blobs_historicos_analisados": 30,
+  "arquivos_no_indice": 31,
+  "achados": [],
+  "metodo": [
+    "git rev-list --all",
+    "git ls-tree recursivo de cada commit",
+    "git cat-file para cada blob único",
+    "git log --all -p",
+    "git ls-files -s"
+  ],
+  "privadas_segredos_binarios_e_senhas_fixadas_detectados": false,
+  "historico_reescrito_nesta_revisao": false
+}
