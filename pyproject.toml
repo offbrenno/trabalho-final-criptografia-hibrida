@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unirv-cripto-hibrida"
+version = "0.2.0"
+description = "Base acadêmica de criptografia híbrida - UniRV"
+requires-python = ">=3.11"
+dependencies = ["cryptography==50.0.2"]
+
+[project.scripts]
+cripto-hibrida = "cripto_hibrida.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
