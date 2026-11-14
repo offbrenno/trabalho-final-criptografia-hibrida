@@ -1,118 +1,167 @@
-# Trabalho Final - Criptografia Híbrida
+# Segurança de Software - base do Trabalho Final
 
-UniRV, Engenharia de Software (3º período), Campus Rio Verde.
-Segurança de Software. Professor: Vinícius Martinez de Oliveira.
+UniRV - Engenharia de Software, 3º período - Campus Rio Verde.
+Professor: Vinícius Martinez de Oliveira. Atividade 16, de 13/11/2026.
 
 ## Integrantes
 
-- Brenno Rego de Oliveira
-- Matheus Almeida Rodrigues
-- João Vitor Silva Martins
+1. Brenno Rego de Oliveira
+2. Matheus Almeida Rodrigues
+3. João Vitor Silva Martins
 
-Aplicação em Python 3 com interface de linha de comando (CLI/argparse).
-Desenvolvimento inicial: 13/11/2026.
+Repositório público: <https://github.com/offbrenno/trabalho-final-criptografia-hibrida>.
 
-## Requisitos e instalação
+## O que está implementado
 
-Python 3.10+ e OpenSSL 3.x. A aplicação usa apenas a biblioteca padrão do Python.
-No Windows, o OpenSSL fornecido pelo Git for Windows é reconhecido automaticamente.
-Também é possível definir `OPENSSL_EXE` ou usar `python app.py --openssl CAMINHO ...`.
+Aplicação Python 3 com CLI (`argparse`), geração de chaves RSA-2048, cifragem e
+decifragem híbrida AES-256-CBC/PBKDF2 + RSA-OAEP/SHA-256, e assinatura destacada
+de arquivos genéricos com RSA/SHA-256. Essas operações usam a biblioteca
+`cryptography` diretamente e funcionam sem executar o binário `openssl`.
 
-Para os testes:
+A assinatura genérica é um arquivo `.sig` separado. Ela não insere uma
+assinatura no PDF e não aparece como assinatura digital no Adobe Acrobat Reader.
+O PDF de exemplo é um documento comum, sem assinatura digital embutida.
+
+## Requisitos e instalação do zero
+
+Python 3.11 ou superior. Instalação e testes verificados com Python 3.12.14,
+`cryptography==50.0.2` e `pytest==9.2.0`, em ambiente virtual novo.
+
+Windows PowerShell, dentro da pasta clonada:
 
 ```powershell
-python -m pip install -r requirements-dev.txt
-python -m pytest -v -s
+git clone https://github.com/offbrenno/trabalho-final-criptografia-hibrida.git
+cd trabalho-final-criptografia-hibrida
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pytest -v -s
+.\.venv\Scripts\python.exe app.py --help
 ```
 
-Os 11 testes exercitam round-trip de arquivos vazios, UTF-8 e binários de até
-1 MiB, aleatoriedade por arquivo, chave privada errada, assinatura e adulteração,
-preservação de saídas existentes, validação de parâmetros e execução real da CLI.
-O log da execução verificada está em `evidencias/pytest.log`.
+Linux/macOS: use `.venv/bin/python` no lugar de `.\.venv\Scripts\python.exe`.
+`requirements.txt` instala as dependências e o pacote local em modo editável.
+O comando `cripto-hibrida` também fica disponível no ambiente virtual.
 
-## Uso dos cinco comandos
+## Uso da CLI
 
-As opções globais `--openssl` e `--log` vêm antes do comando. Nenhuma operação
-sobrescreve chaves, assinaturas, arquivos de saída ou pacotes existentes.
+Nos comandos a seguir, `python` representa o interpretador do ambiente virtual.
+Não reutilize um caminho de saída existente: a aplicação impede sobrescritas.
+Gere um par de teste local com prefixo novo; o Git contém somente chaves públicas.
 
 ```powershell
 python app.py gerar-chaves --pasta chaves --prefixo meu_teste
-python app.py cifrar --entrada exemplos/mensagem.txt --publica chaves/meu_teste_publica.pem --pacote pacotes/teste
-python app.py decifrar --pacote pacotes/teste --privada chaves/meu_teste_privada.pem --saida execucoes/restaurada.txt
-python app.py assinar --entrada exemplos/mensagem.txt --privada chaves/meu_teste_privada.pem --assinatura execucoes/mensagem.sig
-python app.py verificar --entrada execucoes/restaurada.txt --publica chaves/meu_teste_publica.pem --assinatura execucoes/mensagem.sig
-openssl dgst -sha256 exemplos/mensagem.txt execucoes/restaurada.txt
+python app.py cifrar --entrada exemplos/documento_teste.pdf --publica chaves/meu_teste_publica.pem --pacote pacotes/teste
+python app.py decifrar --pacote pacotes/teste --privada chaves/meu_teste_privada.pem --saida execucoes/restaurado.pdf
+python app.py assinar --entrada exemplos/documento_teste.pdf --privada chaves/meu_teste_privada.pem --assinatura execucoes/documento.sig
+python app.py verificar --entrada execucoes/restaurado.pdf --publica chaves/meu_teste_publica.pem --assinatura execucoes/documento.sig
 ```
 
-Crie `execucoes/` antes de usar `pytest --basetemp=execucoes/teste` se optar por
-uma pasta temporária explícita. Sem essa opção, pytest escolhe a própria pasta.
-Use novo prefixo/pacote/caminho a cada execução. Retornos da CLI: 0 para sucesso,
-1 para assinatura inválida e 2 para erro de operação/argumentos.
+`--log CAMINHO`, antes do subcomando, registra os resultados da aplicação.
+Retornos: 0 para sucesso, 1 para assinatura incompatível e 2 para erro de operação
+ou argumentos. A opção antiga `--openssl` foi removida da aplicação.
 
-## Formato do pacote e decisão técnica
+## Formato e compatibilidade da criptografia híbrida
 
-Cada cifragem gera um novo segredo aleatório de 32 bytes, sem reutilização entre
-arquivos. A pasta de saída contém apenas `mensagem.enc`, `chave_aes.enc` e
-`parametros.json`; os parâmetros são públicos, fixos e validados na decifragem.
-O segredo binário é cifrado por RSA-OAEP com SHA-256 e MGF1-SHA256.
+Cada cifragem gera um novo segredo aleatório de 32 bytes. O RSA-OAEP protege
+esses bytes usando SHA-256 tanto no OAEP quanto no MGF1. O pacote contém
+`mensagem.enc`, `chave_aes.enc` e `parametros.json`.
 
-O AES-256-CBC usa `-pbkdf2 -iter 100000 -md sha256` e salt aleatório. Para cumprir
-o enunciado sem o problema de bytes 0x0A/0x00 em `-pass file:`, o segredo é
-codificado em Base64, em uma única linha, antes de ser fornecido ao OpenSSL.
-Base64 é representação, não cifragem. PBKDF2 deriva a chave AES efetiva e o IV
-a partir dessa representação. Os 32 bytes protegidos pelo RSA são o material
-secreto de entrada; não são aplicados diretamente com `-K` ao AES.
+Foi mantido o formato v1 usado na Atividade 16: `mensagem.enc` começa com
+`Salted__`, seguido do salt de 8 bytes e do conteúdo cifrado com padding PKCS#7.
+Para preservar a compatibilidade, o segredo é representado em Base64 e usado
+como entrada de PBKDF2-HMAC-SHA256, com 100.000 iterações e 48 bytes de saída:
+32 para a chave AES-256 e 16 para o IV. O salt de 8 bytes é uma decisão de
+compatibilidade com os pacotes OpenSSL 3.2.1 já produzidos, não uma escolha de
+formato para o Trabalho Final futuro.
 
-As senhas textuais e os segredos ficam em pastas temporárias e são removidos
-ao concluir as operações. A limpeza não equivale a apagamento físico garantido
-do disco. A chave privada de longo prazo fica exclusivamente na pasta local.
+Essa codificação evita tratar bytes 0x00 e 0x0A como senha textual truncada na
+prática com `-pass file:`. Na aplicação migrada, o segredo e a chave derivada
+ficam em memória e não são gravados como senha ou `chave_aes.bin` no disco.
+Foram verificadas a leitura de um pacote antigo e a interoperabilidade com
+OpenSSL nos dois sentidos; o log está em `evidencias/compatibilidade.log`.
 
-CBC não é uma cifra autenticada. Verifique a assinatura do conteúdo restaurado
-antes de confiar nele. A assinatura é separada do pacote e não autentica todos
-os metadados do transporte. Este projeto é uma demonstração acadêmica.
+CBC fornece confidencialidade, mas não autentica os dados. A assinatura destacada
+deve ser verificada antes de confiar no conteúdo restaurado. Ela não autentica
+todo o envelope de transporte. Este é um projeto acadêmico, não um protocolo de
+mensageria autenticada. As chaves privadas de teste ficam sem senha apenas para
+o fluxo didático local; suporte a privadas protegidas por senha ainda não existe.
 
-No envio real, use a pública do professor para cifrar o segredo e a privada do
-grupo para assinar. O professor decifra com sua privada e verifica com a pública
-do grupo, obtida por um canal de identidade confiável. A simulação usa pares
-locais. O par oficial do grupo é separado do par de teste da Parte 2.
+## Estrutura
 
-## Parte 2 reproduzível
+```text
+app.py                         entrada da CLI
+src/cripto_hibrida/chaves.py    geração e leitura de chaves RSA
+src/cripto_hibrida/cripto_hibrida.py  cifragem e decifragem
+src/cripto_hibrida/assinatura.py     assinatura genérica destacada
+src/cripto_hibrida/arquivos.py       hash e escrita de arquivos
+src/cripto_hibrida/cli.py            comandos argparse
+tests/                         testes automatizados
+exemplos/                      mensagem e PDF comum de teste
+chaves/                        somente chaves públicas no Git
+evidencias/                    logs reais da atividade e dos testes
+scripts/pratica_openssl.py     prática de terminal da Parte 2
+requirements.txt              dependências e instalação do pacote
+```
+
+## Testes e evidências
+
+```powershell
+python -m pytest -v -s
+```
+
+Os testes verificam hashes e bytes no round-trip de arquivos vazios, texto UTF-8,
+dados binários de até 1 MiB e um PDF comum; a execução da CLI; aleatoriedade por
+arquivo; assinatura e adulteração; privada errada; truncamento; parâmetros
+inesperados; preservação de saídas; rejeição de chave não RSA; e funcionamento
+com processos externos bloqueados. Saída real: `evidencias/pytest_cryptography.log`.
+Round-trip da CLI atual: `evidencias/aplicacao_cryptography.log`.
+
+As evidências anteriores foram preservadas como registros históricos da
+Atividade 16. Os arquivos `evidencias/aplicacao_openssl.log` e `evidencias/pytest.log`
+descrevem a versão anterior; não descrevem o motor atual.
+Nos logs públicos, apenas os caminhos locais são normalizados e identificados;
+hashes e resultados são mantidos. Os originais ficam fora do Git, em `entrega/`.
+
+O OpenSSL externo é necessário somente para repetir a prática de terminal:
 
 ```powershell
 python scripts/pratica_openssl.py --pasta execucoes/parte2_nova
 ```
 
-Esse script exige base de fusos disponível ao Python (`python -m pip install
-tzdata` no Windows, se necessário). Gera os nomes de arquivos exigidos, inspeciona
-a presença de 0x0A e 0x00 sem revelar o segredo e grava comandos, saídas, hashes e
-comparações de bytes. A pasta deve ser nova ou vazia.
+Esse script exige OpenSSL 3.x e, no Windows, `tzdata` se a base de fusos não
+estiver disponível. Isso não é requisito de execução da aplicação migrada.
 
-## Chaves, logs e Git
+## Chaves e arquivos locais
 
-Somente chaves públicas são versionadas. `.gitignore` bloqueia todos os PEM e
-permite novamente nomes terminados em `publica.pem`; também bloqueia
-`chave_aes*.bin`, senhas, execução local e `entrega/`. Nunca use `git add -f` para
-incluir privadas ou segredos. `.gitattributes` preserva os bytes das evidências.
-Arquivos binários cifrados e assinaturas (`*.enc` e `*.sig`) também ficam somente
-na pasta de execução/entrega local; os logs públicos registram os seus testes.
+`.gitignore` bloqueia PEM em geral, liberando somente os caminhos de chaves
+públicas; também bloqueia `chave_aes*.bin`, senhas, `.key`, `.p12`, `.pfx`, ambientes
+virtuais, arquivos temporários, pacotes cifrados e assinaturas binárias.
+Nunca use `git add -f` para incluir uma privada ou senha.
 
-O par do grupo foi gerado em `chaves/grupo_privada.pem` e
-`chaves/grupo_publica.pem`. A privada não é incluída no Git nem no ZIP de
-distribuição. Para uma instalação a partir do Git/ZIP, gere outro par local com
-novo prefixo; a privada original permanece somente no computador de origem.
+O par do grupo foi mantido no computador de origem: `chaves/grupo_privada.pem`
+é local e ignorada; `chaves/grupo_publica.pem` pode ser compartilhada.
+A chave do professor não foi gerada por este projeto. Um certificado público de
+exemplo só será adicionado quando a etapa X.509 do roadmap for implementada.
 
-`evidencias/` contém os registros reais de OpenSSL, da aplicação e do pytest.
-Nos registros públicos, somente caminhos absolutos do computador foram
-normalizados para `[PROJETO]`, `python` ou `[USUARIO_LOCAL]`; essa alteração é
-identificada no próprio log. Os hashes e resultados foram preservados. As cópias
-originais estão em `entrega/evidencias_originais/`, fora do Git, e são usadas no PDF.
-`evidencias/fingerprint_grupo.txt` registra o SHA-256 do SubjectPublicKeyInfo DER
-da pública do grupo. Não contém chaves privadas ou segredos em texto claro.
+## Roadmap - Trabalho Final ainda não implementado
+
+Este repositório é a base do Trabalho Final **Aplicação para Assinatura e
+Validação Digital de Documentos PDF**. As etapas abaixo são futuras:
+
+- Gerar certificado X.509 autoassinado com RSA de pelo menos 2048 bits.
+- Inserir assinatura digital real em PDF, verificável no Adobe Acrobat Reader.
+- Validar assinatura de PDF e distinguir integridade inválida de certificado
+  autoassinado ou não confiável.
+- Detectar e apresentar alterações posteriores à assinatura de PDF.
+- Incluir exemplos de PDF assinado e certificado público, com documentação.
+
+Nenhuma dessas funcionalidades foi implementada nesta revisão. O comando atual
+`assinar` produz exclusivamente uma assinatura genérica destacada `.sig`.
 
 ## Referências
 
+- [cryptography: RSA](https://cryptography.io/en/stable/hazmat/primitives/asymmetric/rsa/)
+- [cryptography: cifras simétricas](https://cryptography.io/en/stable/hazmat/primitives/symmetric-encryption/)
+- [cryptography: PBKDF2](https://cryptography.io/en/stable/hazmat/primitives/key-derivation-functions/)
 - [OpenSSL enc](https://docs.openssl.org/3.5/man1/openssl-enc/)
-- [OpenSSL pkeyutl](https://docs.openssl.org/3.5/man1/openssl-pkeyutl/)
-- [OpenSSL dgst](https://docs.openssl.org/3.5/man1/openssl-dgst/)
-- [Opções de senha](https://docs.openssl.org/3.5/man1/openssl-passphrase-options/)
 - [RFC 8017](https://datatracker.ietf.org/doc/html/rfc8017)
